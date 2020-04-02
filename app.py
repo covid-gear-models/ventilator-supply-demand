@@ -6,9 +6,11 @@ from dash.dependencies import Input, Output
 from datetime import datetime
 from model import run_SEIR
 
+
 # Step 1. Launch the application
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
 
 # Step 2. Create a Dash layout
 app.layout = html.Div(children=[
