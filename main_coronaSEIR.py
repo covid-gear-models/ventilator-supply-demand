@@ -1,4 +1,5 @@
 import math
+import pandas as pd
 import numpy as np
 import scipy.integrate
 import matplotlib.pyplot as plt
@@ -38,8 +39,6 @@ r1 = 1.0  # reproduction number after quarantine measures - https://papers.ssrn.
 
 # --- derived parameters ---
 days_before_lockdown = (date_of_lockdown - date_of_first_infection).days
-
-#  print(f"Days before lockdown: {days_before_lockdown}")
 
 # almost half infections take place before symptom onset (Drosten)
 # https://www.medrxiv.org/content/10.1101/2020.03.08.20032946v1.full.pdf
@@ -112,8 +111,6 @@ def solve(model, population, E0, beta0, days0, beta1, gamma, sigma):
 
 X, S, E, I, R = solve(model, population, E0, beta0, days_before_lockdown, beta1, gamma, sigma)
 
-# import pdb; pdb.set_trace()
-
 # derived arrays
 F = I * percent_cases_detected
 U = I * icuRate * timeInHospital / timeInfected  # scale for short infectious time vs. real time in hospital
@@ -141,6 +138,16 @@ for i, x in enumerate(X):
 
 D = shared.delay(D,
                  - timeInfected + days_presymptomatic + symptomToHospitalLag + timeInHospital + communicationLag)  # deaths  from R
+
+demand_dict = {'days': X,
+               'susceptible': S,
+               'exposed': E,
+               'infectious': I,
+               'recovered': R,
+               'deaths': D,
+               }
+
+df = pd.DataFrame(demand_dict)
 
 # Plot
 
