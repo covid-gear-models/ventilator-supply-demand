@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.widgets  # Cursor
 import matplotlib.dates
 from datetime import datetime
+from datetime import timedelta
 import shared
 
 import world_data
@@ -148,79 +149,11 @@ demand_dict = {'days': X,
                }
 
 df = pd.DataFrame(demand_dict)
+df['date'] = df['days'].apply(lambda x: date_of_first_infection + timedelta(days=x))
+
+line_plot_data = df.melt(id_vars=['date'],
+                         value_vars=['susceptible', 'exposed', 'infectious', 'recovered', 'deaths'],
+                         value_name='count',
+                         var_name='type')
 
 # Plot
-
-# this boolean determines whether the plot has a log scale on y-axis
-log_plot = 1
-
-fig = plt.figure(dpi=75, figsize=(20, 16))
-ax = fig.add_subplot(111)
-ax.fmt_xdata = matplotlib.dates.DateFormatter('%Y-%m-%d')  # higher date precision for cursor display
-if log_plot:
-    ax.set_yscale("log", nonposy='clip')
-
-# actual country data
-XCDR_data = np.array(world_data.get_country_xcdr(COUNTRY, PROVINCE,
-                                                 excludeCountries=EXCLUDECOUNTRIES, returnDates=True))
-dataOffset = shared.get_offset_X(XCDR_data, D,
-                                 dataOffset)  # match model day to real data day for deaths curve  todo: percentage wise?
-
-ax.plot(XCDR_data[:, 0], XCDR_data[:, 1], 'o', color='orange', alpha=0.5, lw=1,
-        label='cases actually detected in tests')
-ax.plot(XCDR_data[:, 0], XCDR_data[:, 2], 'x', color='black', alpha=0.5, lw=1, label='actually deceased')
-
-# set model time to real world time
-X = shared.model_to_world_time(X - dataOffset, XCDR_data)
-
-# model data
-# ax.plot(X, S, 'b', alpha=0.5, lw=2, label='Susceptible')
-ax.plot(X, E, 'y', alpha=0.5, lw=2, label='Exposed (realtime)')
-ax.plot(X, I, 'r--', alpha=0.5, lw=1, label='Infected (realtime)')
-ax.plot(X, FC, color='orange', alpha=0.5, lw=1, label='Found cumulated: "cases" (lagtime)')
-ax.plot(X, U, 'r', alpha=0.5, lw=2, label='ICU (realtime)')
-# ax.plot(X, R, 'g', alpha=0.5, lw=1, label='Recovered with immunity')
-# ax.plot(X, P, 'c', alpha=0.5, lw=1, label='Probability of infection')
-ax.plot(X, D, 'k', alpha=0.5, lw=1, label='Deaths (lagtime)')
-
-ax.plot([min(X), max(X)], [intensive_units, intensive_units], 'b-.', alpha=0.5, lw=1, label='Number of ICU available')
-
-ax.set_xlabel('Time /days')
-ax.set_ylim(bottom=1.0)
-
-ax.grid(linestyle=':')  # b=True, which='major', c='w', lw=2, ls='-')
-if EXCLUDECOUNTRIES:
-    locationString = COUNTRY + "but " + ",".join(EXCLUDECOUNTRIES) + ' %dk' % (population / 1000)
-locationString = COUNTRY + " " + PROVINCE + ' %dk' % (population / 1000)
-icuString = "  intensive care units: %.0f" % intensive_units + " (guess)"
-legend = ax.legend(title='COVID-19 SEIR model: ' + locationString + ' (beta)\n' + icuString)
-legend.get_frame().set_alpha(0.5)
-for spine in ('top', 'right', 'bottom', 'left'):
-    ax.spines[spine].set_visible(False)
-cursor = matplotlib.widgets.Cursor(ax, color='black', linewidth=1)
-
-# text output
-print("sigma: %.3f  1/sigma: %.3f    gamma: %.3f  1/gamma: %.3f" % (sigma, 1.0 / sigma, gamma, 1.0 / gamma))
-print("beta0: %.3f" % beta0, "   beta1: %.3f" % beta1)
-
-
-def print_info(i):
-    print("day %d" % i)
-    print(" Infected: %d" % I[i], "%.1f" % (I[i] * 100.0 / population))
-    print(" Infected found: %d" % F[i], "%.1f" % (F[i] * 100.0 / population))
-    print(" Infected found cumulated ('cases'): %d" % FC[i], "%.1f" % (FC[i] * 100.0 / population))
-    print(" Hospital: %d" % U[i], "%.1f" % (U[i] * 100.0 / population))
-    print(" Recovered: %d" % R[i], "%.1f" % (R[i] * 100.0 / population))
-    print(" Deaths: %d" % D[i], "%.1f" % (D[i] * 100.0 / population))
-
-
-print_info(days_before_lockdown)
-print_info(daysTotal - 1)
-print("findratio: %.1f%%" % (percent_cases_detected * 100.0))
-print("doubling0 every ~%.1f" % doublingTime, "days")
-print("lockdown measures start:", X[days_before_lockdown])
-
-if 1:
-    plt.show()
-else:
-    plt.savefig('model_run.png')
