@@ -1,4 +1,4 @@
-# coronavirus SEIR model
+# Interactive Plotly version of @coronafighter's SEIR model
 
 Simple SEIR model Python script for the COVID-19 pandemic with real world data.  
   
