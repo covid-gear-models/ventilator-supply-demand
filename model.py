@@ -54,7 +54,7 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
 
     E0 = 1  # number of exposed people at initial time step
     r0 = 3.0  # https://en.wikipedia.org/wiki/Basic_reproduction_number
-    r1 = 1.5  # reproduction number after quarantine measures - https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3539694
+    r1 = 1.1  # reproduction number after quarantine measures - https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3539694
 
     # --- derived parameters ---
     days_before_lockdown = (date_of_lockdown - date_of_first_infection).days
@@ -139,6 +139,7 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
 
     df = pd.DataFrame(demand_dict)
     df['date'] = df['days'].apply(lambda x: date_of_first_infection + timedelta(days=x))
+    df = df.applymap(lambda x: round(x) if isinstance(x, float) else x)
 
     line_plot_data = df.melt(id_vars=['date'],
                              value_vars=['susceptible', 'exposed', 'infectious', 'recovered', 'deaths'],
