@@ -2,9 +2,7 @@ import math
 import pandas as pd
 import numpy as np
 import scipy.integrate
-import matplotlib.pyplot as plt
-import matplotlib.widgets  # Cursor
-import matplotlib.dates
+
 
 from datetime import timedelta
 import shared

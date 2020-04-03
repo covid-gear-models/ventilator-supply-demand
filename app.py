@@ -14,9 +14,13 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # Step 2. Create a Dash layout
 app.layout = html.Div(children=[
+    html.Label('Population'),
     dcc.Input(id='population', value='330000000', type='text'),
+    html.Label('Date of first infection'),
     dcc.Input(id='date-of-first-infection', value='01-15-2020', type='text'),
+    html.Label('Date when social distancing begins'),
     dcc.Input(id='date-of-lockdown', value='03-15-2020', type='text'),
+    html.Label('Number of intensive units available'),
     dcc.Input(id='intensive-units', value='5,000', type='text'),
     dcc.Graph(id='line-plot'),
     html.Div(id='my-div'),
