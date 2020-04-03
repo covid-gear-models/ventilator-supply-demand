@@ -22,6 +22,8 @@ app.layout = html.Div(children=[
     dcc.Input(id='date-of-lockdown', value='03-15-2020', type='text'),
     html.Label('Number of intensive units available'),
     dcc.Input(id='intensive-units', value='5,000', type='text'),
+    html.Label('Mean number of days person stays in ICU'),
+    dcc.Input(id='mean_days_icu', value='5', type='text'),
     dcc.Graph(id='line-plot'),
     html.Div(id='my-div'),
 ])
@@ -40,10 +42,12 @@ def update_output_div(input_value):
     [Input(component_id='population', component_property='value'),
      Input(component_id='date-of-first-infection', component_property='value'),
      Input(component_id='date-of-lockdown', component_property='value'),
-     Input(component_id='intensive-units', component_property='value')],
+     Input(component_id='intensive-units', component_property='value'),
+     Input(component_id='mean_days_icu', component_property='value'),
+     ],
 )
 # Step 3. Run the model in a callback function
-def update_line_plot(pop, date_of_first_infection, date_of_lockdown, intensive_units):
+def update_line_plot(pop, date_of_first_infection, date_of_lockdown, intensive_units, mean_days_icu):
 
     intensive_units = intensive_units.replace(',', '')
     try:
@@ -66,7 +70,12 @@ def update_line_plot(pop, date_of_first_infection, date_of_lockdown, intensive_u
     except ValueError:
         print('Bad date supplied for date of lockdown.')
 
-    df = run_SEIR(pop, intensive_units, date_of_first_infection, date_of_lockdown)
+    try:
+        mean_days_icu = int(mean_days_icu)
+    except ValueError:
+        print('Bad date supplied for mean days in ICU.')
+
+    df = run_SEIR(pop, intensive_units, date_of_first_infection, date_of_lockdown, mean_days_icu)
     groups = df.groupby(by='type')
 
     colors = ['red', 'blue', 'green', 'yellow', 'cyan']
