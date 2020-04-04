@@ -82,16 +82,39 @@ app.layout = html.Div(
             className="row flex-display",
             style={"margin-bottom": "25px"},
         ),
-        html.Div(  # row
+        html.Div(  # row 2
             [
                 html.Div(  # left col
                     [
                         html.Label('Population'),
-                        dcc.Input(id='population', value='10,000,000', type='text'),
+                        dcc.Input(id='population', value='10000000', type='number'),
                         html.Label('Date of first infection'),
                         dcc.Input(id='date-of-first-infection', value='01-15-2020', type='text'),
                         html.Label('Date when social distancing begins'),
                         dcc.Input(id='date-of-lockdown', value='03-15-2020', type='text'),
+                    ],
+                    className="pretty_container four columns",
+                    id="demographic-options",
+                ),
+                html.Div(  # middle col
+                    [
+                        html.Label('Number of intensive units available'),
+                        dcc.Input(id='intensive-units', value='5000', type='number'),
+                        html.Label('Mean number of days person stays in ICU'),
+                        dcc.Input(id='mean_days_icu', value='5', type='number'),
+                        # ventilators
+                        html.Label('Number of ventilators available to start.'),
+                        dcc.Input(id='vents-units-start', value='5000', type='number'),
+                        html.Label('Number of ventilators in first shipment.'),
+                        dcc.Input(id='vents-units-shipment-1', value='200', type='number'),
+                        html.Label('Date of first shipment.'),
+                        dcc.Input(id='vents-date-shipment-1', value='03-20-2020', type='text'),
+                    ],
+                    className="pretty_container four columns",
+                    id="medical-options",
+                ),
+                html.Div(  # middle col
+                    [
                         html.Label('Switch to linear scale.'),
                         daq.ToggleSwitch(
                             id='y-axis-toggle',
@@ -99,17 +122,7 @@ app.layout = html.Div(
                         ),
                     ],
                     className="pretty_container four columns",
-                    id="demographic-options",
-                ),
-                html.Div(  # left col
-                    [
-                        html.Label('Number of intensive units available'),
-                        dcc.Input(id='intensive-units', value='5,000', type='text'),
-                        html.Label('Mean number of days person stays in ICU'),
-                        dcc.Input(id='mean_days_icu', value='5', type='text'),
-                    ],
-                    className="pretty_container four columns",
-                    id="medical-options",
+                    id="visual-options",
                 ),
             ],
             className="row flex-display",
@@ -132,24 +145,24 @@ def update_output_div(input_value):
     [Input(component_id='population', component_property='value'),
      Input(component_id='date-of-first-infection', component_property='value'),
      Input(component_id='date-of-lockdown', component_property='value'),
+     # intensive care units
      Input(component_id='intensive-units', component_property='value'),
      Input(component_id='mean_days_icu', component_property='value'),
+     # ventilators
+     Input(component_id='vents-units-start', component_property='value'),
+     Input(component_id='vents-units-shipment-1', component_property='value'),
+     Input(component_id='vents-dates-shipment-1', component_property='value'),
+     # vis
      Input(component_id='y-axis-toggle', component_property='value'),
      ],
 )
 # Step 3. Run the model in a callback function
 def update_line_plot(pop, date_of_first_infection, date_of_lockdown,
-                     intensive_units, mean_days_icu, y_axis_toggle):
-    intensive_units = intensive_units.replace(',', '')
-    try:
-        pop = int(pop.replace(',', ''))
-    except ValueError:
-        print('Non-integer supplied as population.')
+                     intensive_units, mean_days_icu,
+                     vents_units_start, vents_units_sh1, vents_date_sh1,
+                     y_axis_toggle):
 
-    try:
-        intensive_units = int(intensive_units.replace(',', ''))
-    except ValueError:
-        print('Non-integer supplied for intensive units.')
+    pop, intensive_units, mean_days_icu = int(pop), int(intensive_units), int(mean_days_icu)
 
     try:
         date_of_first_infection = datetime.strptime(date_of_first_infection, '%m-%d-%Y')
@@ -161,17 +174,16 @@ def update_line_plot(pop, date_of_first_infection, date_of_lockdown,
     except ValueError:
         print('Bad date supplied for date of lockdown.')
 
-    try:
-        mean_days_icu = int(mean_days_icu)
-    except ValueError:
-        print('Bad date supplied for mean days in ICU.')
-
     if y_axis_toggle == False:
         y_axis_scale = 'log'
     else:
         y_axis_scale = 'linear'
 
-    df = run_SEIR(pop, intensive_units, date_of_first_infection, date_of_lockdown, mean_days_icu)
+    df = run_SEIR(pop, date_of_first_infection, date_of_lockdown,
+                  intensive_units, mean_days_icu,
+                  vents_units_start, vents_units_sh1, vents_date_sh1,
+                  )
+
     groups = df.groupby(by='type')
 
     colors = ['red', 'blue', 'green', 'yellow', 'cyan']

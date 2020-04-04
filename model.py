@@ -35,7 +35,9 @@ def solve(model, population, E0, beta0, days0, beta1, gamma, sigma, days_total):
     return X, S, E, I, R  # note these are all arrays
 
 
-def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockdown, mean_days_icu):
+def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockdown,
+             mean_days_icu,
+             vents_units_start, vents_units_sh1, vents_date_sh1,):
 
     # --- external parameters ---
     days_total = 365  # total days to model
@@ -69,10 +71,10 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
     percent_cases_detected = (1.0 - percent_asymptomatic) / 20.0
 
     days_in_hospital = 12
-    days_infectious = 1.0 / gamma  # better timeInfectious?
+    days_infectious = 1.0 / gamma  # better days_infectious?
 
-    # lag, whole days - need sources
-    presymptomatic_lag = round(days_presymptomatic)  # effort probably not worth to be more precise than 1 day
+    # lag in whole days - need sources
+    presymptomatic_lag = round(days_presymptomatic)
     communication_lag = 2
     test_lag = 3
     symptom_to_hospital_lag = 5
