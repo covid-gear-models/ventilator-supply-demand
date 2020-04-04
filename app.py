@@ -39,7 +39,7 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.Img(
-                            src=app.get_asset_url("dash-logo.png"),
+                            src=app.get_asset_url("necsi-logo.png"),
                             id="NECSI-image",
                             style={
                                 "height": "60px",
@@ -82,20 +82,37 @@ app.layout = html.Div(
             className="row flex-display",
             style={"margin-bottom": "25px"},
         ),
-        html.Label('Population'),
-        dcc.Input(id='population', value='330000000', type='text'),
-        html.Label('Date of first infection'),
-        dcc.Input(id='date-of-first-infection', value='01-15-2020', type='text'),
-        html.Label('Date when social distancing begins'),
-        dcc.Input(id='date-of-lockdown', value='03-15-2020', type='text'),
-        html.Label('Number of intensive units available'),
-        dcc.Input(id='intensive-units', value='5,000', type='text'),
-        html.Label('Mean number of days person stays in ICU'),
-        dcc.Input(id='mean_days_icu', value='5', type='text'),
-        html.Label('Switch to linear scale.'),
-        daq.ToggleSwitch(
-            id='y-axis-toggle',
-            value=False
+        html.Div(  # row
+            [
+                html.Div(  # left col
+                    [
+                        html.Label('Population'),
+                        dcc.Input(id='population', value='10,000,000', type='text'),
+                        html.Label('Date of first infection'),
+                        dcc.Input(id='date-of-first-infection', value='01-15-2020', type='text'),
+                        html.Label('Date when social distancing begins'),
+                        dcc.Input(id='date-of-lockdown', value='03-15-2020', type='text'),
+                        html.Label('Switch to linear scale.'),
+                        daq.ToggleSwitch(
+                            id='y-axis-toggle',
+                            value=False
+                        ),
+                    ],
+                    className="pretty_container four columns",
+                    id="demographic-options",
+                ),
+                html.Div(  # left col
+                    [
+                        html.Label('Number of intensive units available'),
+                        dcc.Input(id='intensive-units', value='5,000', type='text'),
+                        html.Label('Mean number of days person stays in ICU'),
+                        dcc.Input(id='mean_days_icu', value='5', type='text'),
+                    ],
+                    className="pretty_container four columns",
+                    id="medical-options",
+                ),
+            ],
+            className="row flex-display",
         ),
         dcc.Graph(id='line-plot'),
         html.Div(id='my-div'),
