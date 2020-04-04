@@ -151,7 +151,7 @@ def update_output_div(input_value):
      # ventilators
      Input(component_id='vents-units-start', component_property='value'),
      Input(component_id='vents-units-shipment-1', component_property='value'),
-     Input(component_id='vents-dates-shipment-1', component_property='value'),
+     Input(component_id='vents-date-shipment-1', component_property='value'),
      # vis
      Input(component_id='y-axis-toggle', component_property='value'),
      ],
@@ -162,7 +162,10 @@ def update_line_plot(pop, date_of_first_infection, date_of_lockdown,
                      vents_units_start, vents_units_sh1, vents_date_sh1,
                      y_axis_toggle):
 
-    pop, intensive_units, mean_days_icu = int(pop), int(intensive_units), int(mean_days_icu)
+
+
+    pop, intensive_units, mean_days_icu, vents_units_start, vents_units_sh1 = int(pop), int(intensive_units), \
+                                                           int(mean_days_icu), int(vents_units_start), int(vents_units_sh1)
 
     try:
         date_of_first_infection = datetime.strptime(date_of_first_infection, '%m-%d-%Y')
@@ -173,6 +176,11 @@ def update_line_plot(pop, date_of_first_infection, date_of_lockdown,
         date_of_lockdown = datetime.strptime(date_of_lockdown, '%m-%d-%Y')
     except ValueError:
         print('Bad date supplied for date of lockdown.')
+
+    try:
+        vents_date_sh1 = datetime.strptime(vents_date_sh1, '%m-%d-%Y')
+    except ValueError:
+        print('Bad date supplied for date of first vents shipment.')
 
     if y_axis_toggle == False:
         y_axis_scale = 'log'
@@ -186,7 +194,7 @@ def update_line_plot(pop, date_of_first_infection, date_of_lockdown,
 
     groups = df.groupby(by='type')
 
-    colors = ['red', 'blue', 'green', 'yellow', 'cyan']
+    colors = ['red', 'blue', 'orange', 'green', 'cyan']
     data = []
     for group, dataframe in groups:
         dataframe = dataframe.sort_values(by=['date'])
