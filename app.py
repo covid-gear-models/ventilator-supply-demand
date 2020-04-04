@@ -32,7 +32,7 @@ layout = dict(
 app.layout = html.Div(
     children=[
         dcc.Store(id="aggregate_data"),
-        # empty Div to trigger javascript file for graph resizing
+        # empty Div to trigger javascript file for graph resizing 
         html.Div(id="output-clientside"),
         html.Div(
             [
