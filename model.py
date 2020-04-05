@@ -35,7 +35,9 @@ def solve(model, population, E0, beta0, days0, beta1, gamma, sigma, days_total):
     return X, S, E, I, R  # note these are all arrays
 
 
-def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockdown, mean_days_icu):
+def run_SEIR(population, date_of_first_infection, date_of_lockdown,
+             intensive_units, mean_days_icu,
+             vents_units_start, vents_units_sh1, vents_date_sh1,):
 
     # --- external parameters ---
     days_total = 365  # total days to model
@@ -69,10 +71,10 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
     percent_cases_detected = (1.0 - percent_asymptomatic) / 20.0
 
     days_in_hospital = 12
-    days_infectious = 1.0 / gamma  # better timeInfectious?
+    days_infectious = 1.0 / gamma  # better days_infectious?
 
-    # lag, whole days - need sources
-    presymptomatic_lag = round(days_presymptomatic)  # effort probably not worth to be more precise than 1 day
+    # lag in whole days - need sources
+    presymptomatic_lag = round(days_presymptomatic)
     communication_lag = 2
     test_lag = 3
     symptom_to_hospital_lag = 5
@@ -80,7 +82,11 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
 
     infectionFatalityRateA = 0.01  # Diamond Princess, age corrected
     infectionFatalityRateB = infectionFatalityRateA * 3.0  # higher lethality without ICU - by how much?  even higher without oxygen and meds
-    icuRate = infectionFatalityRateA * 2  # Imperial College NPI study: hospitalized/ICU/fatal = 6/2/1
+
+    # icu_rate and vent_rate based on figures from Wuhan study https://www.thelancet.com/journals/lanres/article/PIIS2213-2600(20)30110-7/fulltext
+    icu_rate = (52 / 710)
+    vent_rate = (22 / 56)
+    # icuRate = infectionFatalityRateA * 2  # Imperial College NPI study: hospitalized/ICU/fatal = 6/2/1
 
     beta0 = r0 * gamma  # The parameter controlling how often a susceptible-infected contact results in a new infection.
     beta1 = r1 * gamma  # beta0 is used during days0 phase, beta1 after days0
@@ -99,14 +105,23 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
                    }
 
     df = pd.DataFrame(demand_dict)
-    df['date'] = df['days'].apply(lambda x: date_of_first_infection + timedelta(days=x))
-    df = df.applymap(lambda x: round(x) if isinstance(x, float) else x)
-
 
     # Feature engineering
-    df['needs_icu'] = df.apply(lambda x: round(x['infectious'] * icuRate), axis=1)
-    df['needs_icu'] = df['needs_icu'].shift(10).rolling(window=mean_days_icu).sum()
+    df['date'] = df['days'].apply(lambda x: date_of_first_infection + timedelta(days=x))
+    df['vents'] = df.apply(lambda x: vents_units_start if x['date'] < vents_date_sh1 else (vents_units_start + vents_units_sh1), axis=1)
+    df = df.applymap(lambda x: round(x) if isinstance(x, float) else x)
+
+    # Compute time series of patients who require intensive-care unit
+    df['needs_icu'] = df.apply(lambda x: round(x['infectious'] * icu_rate), axis=1)
+    # Number of patients who need an icu at any given time is a rolling function of those who needed it over the last x days
+    df['needs_icu'] = df['needs_icu'].shift(10).rolling(window=mean_days_icu, win_type='gaussian').sum(std=3)
+    df.fillna(0, inplace=True)
+
+    # Compute time series of patients who require mechanical ventilation
+    df['needs_ventilator'] = df.apply(lambda x: round(x['needs_icu'] * vent_rate), axis=1)
+    df['needs_ventilator'] = df['needs_ventilator'].shift(3).rolling(window=3, win_type='gaussian').sum(std=3)
     df.drop(columns=['exposed'], inplace=True)
+
 
 
     # # derived arrays
@@ -144,7 +159,7 @@ def run_SEIR(population, intensive_units, date_of_first_infection, date_of_lockd
 
 
     line_plot_data = df.melt(id_vars=['date'],
-                             value_vars=['susceptible', 'infectious', 'recovered', 'needs_icu'],
+                             value_vars=['infectious', 'needs_icu', 'vents', 'needs_ventilator'],
                              value_name='count',
                              var_name='type')
 
