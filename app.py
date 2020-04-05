@@ -17,6 +17,8 @@ app = dash.Dash(
     external_stylesheets=external_stylesheets
 )
 
+server = app.server
+
 # Step 2. Create a Dash layout
 layout = dict(
     autosize=True,
